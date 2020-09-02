@@ -42,10 +42,13 @@ struct UserController: RouteCollection {
     }
     
     func create(req: Request) throws -> EventLoopFuture<User> {
-        let user: User = try req.content.decode(User.self)
+        let user: User = try req
+            .content
+            .decode(User.self)
+            .setPassword(password: req.parameters.get("password").map { try req.password.hash($0) })
         return user
             .create(on: req.db)
-            .transform(to: user.hidePassword())
+            .transform(to: user)
     }
 
     func show(req: Request) throws -> EventLoopFuture<User> {
@@ -55,7 +58,6 @@ struct UserController: RouteCollection {
         
         return User
             .find(UUID(id), on: req.db)
-            .optionalMap { user in user.hidePassword() }
             .unwrap(or: Abort(.notFound))
     }
 
@@ -76,7 +78,7 @@ struct UserController: RouteCollection {
                 user.group = updatedUser.group
                 
                 return user.save(on: req.db)
-                    .transform(to: user.hidePassword())
+                    .transform(to: user)
         }
     }
 

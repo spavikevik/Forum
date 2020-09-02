@@ -51,13 +51,17 @@ final class User: Model, Content {
         self.registeredAt = registeredAt
     }
     
-    func hidePassword() -> User {
-        User(
+    func beforeEncode() throws {
+        self.password = "<filtered out>"
+    }
+    
+    func setPassword(password: String?) throws -> User {
+        return User(
             id: self.id,
             group: self.group,
             email: self.email,
             username: self.username,
-            password: nil,
+            password: password,
             registeredAt: self.registeredAt
         )
     }
